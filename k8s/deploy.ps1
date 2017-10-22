@@ -11,7 +11,8 @@ Param(
     [parameter(Mandatory=$false)][bool]$buildImages=$true,
     [parameter(Mandatory=$false)][bool]$buildBits=$false,
     [parameter(Mandatory=$false)][bool]$deployInfrastructure=$true,
-    [parameter(Mandatory=$false)][string]$dockerOrg="eshop"
+    [parameter(Mandatory=$false)][string]$dockerOrg="eshop",
+    [parameter(Mandatory=$false)][string]$imagePrefix=""
 )
 
 function ExecKube($cmd) {    
@@ -66,7 +67,7 @@ if ($buildImages) {
     $services = ("basket.api", "catalog.api", "identity.api", "ordering.api", "marketing.api","payment.api","locations.api", "webmvc", "webspa", "webstatus", "graceperiodmanager")
 
     foreach ($service in $services) {
-        $imageFqdn = if ($useDockerHub)  {"$dockerOrg/${service}"} else {"$registry/$dockerOrg/${service}"}
+        $imageFqdn = if ($useDockerHub)  {"$dockerOrg/${imagePrefix}${service}"} else {"$registry/$dockerOrg/${imagePrefix}${service}"}
         docker tag eshop/${service}:$imageTag ${imageFqdn}:$imageTag
         docker push ${imageFqdn}:$imageTag            
     }
@@ -191,19 +192,19 @@ if (-not [string]::IsNullOrEmpty($registry)) {
     $registryPath = "$registry/"
 }
 
-Write-Host "Update Image containers to use prefix '$registryPath$dockerOrg' and tag '$imageTag'" -ForegroundColor Yellow
+Write-Host "Update Image containers to use prefix '$registryPath$dockerOrg' and tag '$imagePrefix$imageTag'" -ForegroundColor Yellow
 
-ExecKube -cmd 'set image deployments/basket basket=${registryPath}${dockerOrg}/basket.api:$imageTag'
-ExecKube -cmd 'set image deployments/catalog catalog=${registryPath}${dockerOrg}/catalog.api:$imageTag'
-ExecKube -cmd 'set image deployments/identity identity=${registryPath}${dockerOrg}/identity.api:$imageTag'
-ExecKube -cmd 'set image deployments/ordering ordering=${registryPath}${dockerOrg}/ordering.api:$imageTag'
-ExecKube -cmd 'set image deployments/marketing marketing=${registryPath}${dockerOrg}/marketing.api:$imageTag'
-ExecKube -cmd 'set image deployments/locations locations=${registryPath}${dockerOrg}/locations.api:$imageTag'
-ExecKube -cmd 'set image deployments/payment payment=${registryPath}${dockerOrg}/payment.api:$imageTag'
-ExecKube -cmd 'set image deployments/webmvc webmvc=${registryPath}${dockerOrg}/webmvc:$imageTag'
-ExecKube -cmd 'set image deployments/webstatus webstatus=${registryPath}${dockerOrg}/webstatus:$imageTag'
-ExecKube -cmd 'set image deployments/webspa webspa=${registryPath}${dockerOrg}/webspa:$imageTag'
-ExecKube -cmd 'set image deployments/graceperiodmanager graceperiodmanager=${registryPath}${dockerOrg}/graceperiodmanager:$imageTag'
+ExecKube -cmd 'set image deployments/basket basket=${registryPath}${dockerOrg}/${imagePrefix}basket.api:$imageTag'
+ExecKube -cmd 'set image deployments/catalog catalog=${registryPath}${dockerOrg}/${imagePrefix}catalog.api:$imageTag'
+ExecKube -cmd 'set image deployments/identity identity=${registryPath}${dockerOrg}/${imagePrefix}identity.api:$imageTag'
+ExecKube -cmd 'set image deployments/ordering ordering=${registryPath}${dockerOrg}/${imagePrefix}ordering.api:$imageTag'
+ExecKube -cmd 'set image deployments/marketing marketing=${registryPath}${dockerOrg}/${imagePrefix}marketing.api:$imageTag'
+ExecKube -cmd 'set image deployments/locations locations=${registryPath}${dockerOrg}/${imagePrefix}locations.api:$imageTag'
+ExecKube -cmd 'set image deployments/payment payment=${registryPath}${dockerOrg}/${imagePrefix}payment.api:$imageTag'
+ExecKube -cmd 'set image deployments/webmvc webmvc=${registryPath}${dockerOrg}/${imagePrefix}webmvc:$imageTag'
+ExecKube -cmd 'set image deployments/webstatus webstatus=${registryPath}${dockerOrg}/${imagePrefix}webstatus:$imageTag'
+ExecKube -cmd 'set image deployments/webspa webspa=${registryPath}${dockerOrg}/${imagePrefix}webspa:$imageTag'
+ExecKube -cmd 'set image deployments/graceperiodmanager graceperiodmanager=${registryPath}${dockerOrg}/${imagePrefix}graceperiodmanager:$imageTag'
 
 Write-Host "Execute rollout..." -ForegroundColor Yellow
 ExecKube -cmd 'rollout resume deployments/basket'
